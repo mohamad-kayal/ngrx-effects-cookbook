@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": ["apps/demo/src/main.ts"],
+  "include": ["apps/demo/src/**/*.ts", "recipes/**/*.ts"],
+  "exclude": ["recipes/**/*.spec.ts"]
+}

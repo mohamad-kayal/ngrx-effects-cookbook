@@ -1,0 +1,46 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "dom"],
+    "paths": {
+      "@recipes/race-conditions": ["recipes/01-race-conditions/index.ts"],
+      "@recipes/race-conditions/*": ["recipes/01-race-conditions/*"],
+      "@recipes/retry-backoff": ["recipes/02-retry-backoff/index.ts"],
+      "@recipes/retry-backoff/*": ["recipes/02-retry-backoff/*"],
+      "@recipes/optimistic-rollback": ["recipes/03-optimistic-rollback/index.ts"],
+      "@recipes/optimistic-rollback/*": ["recipes/03-optimistic-rollback/*"],
+      "@recipes/polling-lifecycle": ["recipes/04-polling-lifecycle/index.ts"],
+      "@recipes/polling-lifecycle/*": ["recipes/04-polling-lifecycle/*"],
+      "@recipes/cancel-on-route": ["recipes/05-cancel-on-route/index.ts"],
+      "@recipes/cancel-on-route/*": ["recipes/05-cancel-on-route/*"],
+      "@recipes/cross-effect-coordination": ["recipes/06-cross-effect-coordination/index.ts"],
+      "@recipes/cross-effect-coordination/*": ["recipes/06-cross-effect-coordination/*"],
+      "@recipes/debounce-input": ["recipes/07-debounce-input/index.ts"],
+      "@recipes/debounce-input/*": ["recipes/07-debounce-input/*"],
+      "@recipes/long-running-progress": ["recipes/08-long-running-progress/index.ts"],
+      "@recipes/long-running-progress/*": ["recipes/08-long-running-progress/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}
