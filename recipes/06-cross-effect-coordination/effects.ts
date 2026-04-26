@@ -8,14 +8,13 @@ import { CoordinationActions, CoordinationPattern, CurrentUser } from './actions
 import { CoordinationApi } from './api';
 import { selectCurrentUser } from './selectors';
 
-type CurrentUserStore = {
-  select: (selector: unknown) => Observable<CurrentUser | null>;
-};
-
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'Unknown error';
 
 const isUser = (user: CurrentUser | null): user is CurrentUser => user !== null;
+
+const hasReadyUser = <T extends Action>(pair: [T, CurrentUser | null]): pair is [T, CurrentUser] =>
+  isUser(pair[1]);
 
 function dashboardActions(
   api: Pick<CoordinationApi, 'loadDashboard'>,
@@ -59,26 +58,26 @@ export function createCoordinationActionDashboardEffect(
 
 export function createRoutePivotDashboardEffect(
   actions$: Observable<Action>,
-  store: CurrentUserStore,
+  currentUser$: Observable<CurrentUser | null>,
   api: Pick<CoordinationApi, 'loadDashboard'>
 ): Observable<Action> {
   return actions$.pipe(
     ofType(CoordinationActions.dashboardRouteEntered),
-    concatLatestFrom(() => store.select(selectCurrentUser)),
-    filter(([, user]) => isUser(user)),
-    switchMap(([, user]) => dashboardActions(api, user as CurrentUser, 'route-pivot'))
+    concatLatestFrom(() => currentUser$),
+    filter(hasReadyUser),
+    switchMap(([, user]) => dashboardActions(api, user, 'route-pivot'))
   );
 }
 
 export function createReadySelectorDashboardEffect(
   actions$: Observable<Action>,
-  store: CurrentUserStore,
+  currentUser$: Observable<CurrentUser | null>,
   api: Pick<CoordinationApi, 'loadDashboard'>
 ): Observable<Action> {
   return actions$.pipe(
     ofType(CoordinationActions.dashboardRequested),
     switchMap(() =>
-      store.select(selectCurrentUser).pipe(
+      currentUser$.pipe(
         filter(isUser),
         take(1),
         switchMap((user) => dashboardActions(api, user, 'ready-selector'))
@@ -101,13 +100,13 @@ const coordinationActionDashboardEffect = createEffect(
 
 const routePivotDashboardEffect = createEffect(
   (actions$ = inject(Actions), store = inject(Store), api = inject(CoordinationApi)) =>
-    createRoutePivotDashboardEffect(actions$, store as CurrentUserStore, api),
+    createRoutePivotDashboardEffect(actions$, store.select(selectCurrentUser), api),
   { functional: true }
 );
 
 const readySelectorDashboardEffect = createEffect(
   (actions$ = inject(Actions), store = inject(Store), api = inject(CoordinationApi)) =>
-    createReadySelectorDashboardEffect(actions$, store as CurrentUserStore, api),
+    createReadySelectorDashboardEffect(actions$, store.select(selectCurrentUser), api),
   { functional: true }
 );
 

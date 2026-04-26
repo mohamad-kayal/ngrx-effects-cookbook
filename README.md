@@ -1,23 +1,30 @@
 # ngrx-effects-cookbook
 
-Tested, opinionated NGRX Effects recipes for the timing problems that usually show up after an app has real users: racing requests, retries, optimistic rollbacks, polling lifecycle leaks, route cancellation, cross-effect coordination, debounced input, and long-running progress streams.
+Production-shaped Angular NGRX Effects recipes for the timing problems that appear once an app has real users: racing requests, retries, optimistic rollbacks, polling lifecycle leaks, route cancellation, cross-effect coordination, debounced input, and long-running progress streams.
 
 [![CI](https://github.com/mohamad-kayal/ngrx-effects-cookbook/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamad-kayal/ngrx-effects-cookbook/actions/workflows/ci.yml)
+![Angular](https://img.shields.io/badge/Angular-21-c3002f)
+![NGRX](https://img.shields.io/badge/NGRX-21-7a1ea1)
+![Tests](https://img.shields.io/badge/tests-36%20passing-2f855a)
+![License](https://img.shields.io/badge/license-MIT-334155)
 
-## Problem
+![Demo overview](docs/assets/demo-overview.svg)
 
-The official docs teach the APIs. They do not spend much time on the production failure modes: a stale search response wins, a save is cancelled mid-flight, a retry hammers a 401, a polling stream keeps running after logout, or an optimistic rollback clobbers a newer user action.
+## Why this exists
+
+The official docs teach the APIs. This repo focuses on the failure modes that are harder to reason about from reference docs alone: a stale search response wins, a save is cancelled mid-flight, a retry hammers a 401, a polling stream keeps running after logout, or an optimistic rollback clobbers a newer user action.
 
 This repo is a focused reference for those edges. It is about Effects, not NGRX basics, Entity Adapter, or Signal Store.
 
-## What I built
+## Highlights
 
-- A plain Angular standalone demo app with one lazy route per recipe.
-- Eight copyable recipe folders under `recipes/`, each shaped as a complete feature slice: actions, reducer, selectors, effects, mock backend, component, diagram, and tests.
-- Timing-focused Jest/RxJS tests that prove the behavior under concurrency, cancellation, retry, and virtual time.
-- Mermaid diagrams and decision matrices so the pattern is quick to reason about before copying code.
+- Angular standalone demo app with one lazy route per recipe.
+- Eight copyable recipe folders, each shaped as a complete feature slice: actions, reducer, selectors, effects, mock backend, component, diagram, and tests.
+- Functional NGRX Effects backed by pure factory functions for direct virtual-time testing.
+- Timing-focused Jest and RxJS `TestScheduler` specs for concurrency, cancellation, retry, route exits, and progress streams.
+- Mermaid diagrams and decision matrices so each pattern is easy to reason about before copying code.
 
-## Recipe index
+## Recipes
 
 | Recipe | Why it exists |
 |---|---|
@@ -30,7 +37,26 @@ This repo is a focused reference for those edges. It is about Effects, not NGRX 
 | [07 Debouncing user input to an API](recipes/07-debounce-input/README.md) | Split typing and loading states, skip duplicates, cancel empty input, and cancel stale requests. |
 | [08 Long-running tasks with progress](recipes/08-long-running-progress/README.md) | Feed server-pushed progress events into the store, with cancellation and finalization. |
 
-## Try it
+## Tech stack
+
+- Angular 21 standalone APIs and lazy route components.
+- NGRX 21 Store, Effects, Store Devtools, and `@ngrx/operators`.
+- RxJS 7 streams, cancellation, retries, timers, and virtual time.
+- Jest 30 with `jest-preset-angular` and `TestScheduler` coverage.
+- ESLint, Prettier, TypeScript strict mode, and GitHub Actions CI.
+
+## Project structure
+
+```text
+apps/demo/          Angular demo shell and routed recipe pages
+recipes/            One complete NGRX feature slice per recipe
+docs/assets/        README and presentation assets
+.github/workflows/  CI verification for Node 20 and 22
+```
+
+## Getting started
+
+Requires Node `>=20 <23` and npm `>=10`.
 
 ```bash
 npm install
@@ -39,17 +65,23 @@ npm start
 
 Open `http://localhost:4200` and use the left nav to poke each recipe. The mock backends are intentionally local RxJS streams: `timer`, `of`, `throwError`, and a few fail-next toggles.
 
-## Verify it
+## Quality gate
 
 ```bash
-npm test
+npm run verify
+```
+
+The full gate runs linting, the Jest suite, and a production Angular build. The current suite has 36 specs covering happy paths, failure modes, cancellation, retry caps, route exits, out-of-order optimistic acknowledgements, and debounced retry behavior.
+
+You can also run the pieces individually:
+
+```bash
 npm run lint
+npm test
 npm run build
 ```
 
-The tests are the asset. Each recipe has specs covering the happy path, the failure mode the recipe addresses, and at least one timing edge case.
-
-## How it works
+## Implementation style
 
 The demo app uses standalone Angular providers:
 
@@ -60,11 +92,19 @@ The demo app uses standalone Angular providers:
 
 Each effect file exports pure factory functions first, then wraps them in functional effects. That keeps the production code idiomatic while making the timing tests small and direct.
 
-## What I would do next
+## Roadmap
 
-- Add short screen captures for each route once the GitHub repo exists.
-- Add a negative-test appendix showing the wrong-way snippets failing the same specs.
+- Deploy the demo to GitHub Pages after the repository is created.
+- Add a short negative-test appendix showing the wrong-way snippets failing the same specs.
 - Split a follow-up repo for Signal Store patterns rather than mixing paradigms here.
+
+## Suggested GitHub topics
+
+`angular`, `ngrx`, `ngrx-effects`, `rxjs`, `typescript`, `frontend`, `state-management`, `jest`, `testing`, `cookbook`
+
+## License
+
+MIT
 
 ## Why I built it
 

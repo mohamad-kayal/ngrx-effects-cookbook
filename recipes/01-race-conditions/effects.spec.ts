@@ -4,7 +4,8 @@ import { RaceConditionsActions } from './actions';
 import {
   createSaveDraftEffect,
   createSearchUsersEffect,
-  createSubmitPaymentEffect
+  createSubmitPaymentEffect,
+  createUploadAvatarEffect
 } from './effects';
 
 describe('race conditions effects', () => {
@@ -73,6 +74,31 @@ describe('race conditions effects', () => {
       });
       flush();
       expect(api.submitPayment).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('uses mergeMap so independent uploads can complete out of order', () => {
+    scheduler.run(({ hot, cold, expectObservable }) => {
+      const actions$ = hot('a-b----', {
+        a: RaceConditionsActions.uploadAvatar({ fileName: 'large.png' }),
+        b: RaceConditionsActions.uploadAvatar({ fileName: 'small.png' })
+      });
+      const api = {
+        uploadAvatar: jest.fn((fileName: string) =>
+          fileName === 'large.png'
+            ? cold('----x|', { x: { fileName, uploadedAt: 'later' } })
+            : cold('-x|', { x: { fileName, uploadedAt: 'sooner' } })
+        )
+      };
+
+      expectObservable(createUploadAvatarEffect(actions$, api)).toBe('---ba--', {
+        a: RaceConditionsActions.uploadAvatarSuccess({
+          receipt: { fileName: 'large.png', uploadedAt: 'later' }
+        }),
+        b: RaceConditionsActions.uploadAvatarSuccess({
+          receipt: { fileName: 'small.png', uploadedAt: 'sooner' }
+        })
+      });
     });
   });
 });

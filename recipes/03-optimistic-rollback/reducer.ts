@@ -5,12 +5,14 @@ import { FeatureFlag, OptimisticRollbackActions } from './actions';
 export interface PendingFlagChange {
   correlationId: string;
   enabled: boolean;
+  sequence: number;
 }
 
 export interface OptimisticRollbackState {
   entities: Record<string, FeatureFlag>;
   serverEntities: Record<string, FeatureFlag>;
   pending: Record<string, PendingFlagChange[]>;
+  nextSequence: number;
   error: string | null;
   log: string[];
 }
@@ -24,6 +26,7 @@ export const initialOptimisticRollbackState: OptimisticRollbackState = {
   entities: initialFlags,
   serverEntities: initialFlags,
   pending: {},
+  nextSequence: 1,
   error: null,
   log: ['Ready']
 };
@@ -59,17 +62,38 @@ function withoutCorrelation(
   };
 }
 
+function findPendingChange(
+  pending: Record<string, PendingFlagChange[]>,
+  id: string,
+  correlationId: string
+): PendingFlagChange | undefined {
+  return (pending[id] ?? []).find((change) => change.correlationId === correlationId);
+}
+
+function withoutSupersededChanges(
+  pending: Record<string, PendingFlagChange[]>,
+  id: string,
+  confirmedSequence: number
+): Record<string, PendingFlagChange[]> {
+  return {
+    ...pending,
+    [id]: (pending[id] ?? []).filter((change) => change.sequence > confirmedSequence)
+  };
+}
+
 export const optimisticRollbackReducer = createReducer(
   initialOptimisticRollbackState,
   on(OptimisticRollbackActions.toggleFlagOptimistic, (state, { id, enabled, correlationId }) => {
+    const sequence = state.nextSequence;
     const pending = {
       ...state.pending,
-      [id]: [...(state.pending[id] ?? []), { correlationId, enabled }]
+      [id]: [...(state.pending[id] ?? []), { correlationId, enabled, sequence }]
     };
 
     return addLog(
       {
         ...state,
+        nextSequence: sequence + 1,
         pending,
         entities: { ...state.entities, [id]: rebuildEntity(id, state.serverEntities, pending) },
         error: null
@@ -78,18 +102,35 @@ export const optimisticRollbackReducer = createReducer(
     );
   }),
   on(OptimisticRollbackActions.toggleFlagSuccess, (state, { id, enabled, correlationId }) => {
+    const confirmedChange = findPendingChange(state.pending, id, correlationId);
+
+    if (!confirmedChange) {
+      return addLog(state, `ignored stale success ${correlationId}`);
+    }
+
     const serverEntities = {
       ...state.serverEntities,
       [id]: { ...state.serverEntities[id], enabled }
     };
-    const pending = withoutCorrelation(state.pending, id, correlationId);
+    const pending = withoutSupersededChanges(state.pending, id, confirmedChange.sequence);
 
     return addLog(
-      { ...state, serverEntities, pending, entities: { ...state.entities, [id]: rebuildEntity(id, serverEntities, pending) } },
+      {
+        ...state,
+        serverEntities,
+        pending,
+        entities: { ...state.entities, [id]: rebuildEntity(id, serverEntities, pending) }
+      },
       `confirmed ${correlationId}`
     );
   }),
   on(OptimisticRollbackActions.toggleFlagFailure, (state, { id, correlationId, error }) => {
+    const failedChange = findPendingChange(state.pending, id, correlationId);
+
+    if (!failedChange) {
+      return addLog(state, `ignored stale failure ${correlationId}`);
+    }
+
     const pending = withoutCorrelation(state.pending, id, correlationId);
 
     return addLog(

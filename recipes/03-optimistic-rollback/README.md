@@ -27,21 +27,41 @@ on(updateFailed, (state) => ({ ...state, value: state.previous })),
 
 ## The right way
 
-Track each optimistic update as its own pending entry, keyed by a correlation ID:
+Track each optimistic update as its own pending entry, keyed by a correlation ID and ordered by a local sequence number:
 
 ```ts
-type Pending = Record<string, Array<{ correlationId: string; enabled: boolean }>>;
+type Pending = Record<string, Array<{ correlationId: string; enabled: boolean; sequence: number }>>;
 
 on(toggleFlagOptimistic, (state, { id, enabled, correlationId }) => {
+  const sequence = state.nextSequence;
   const pending = {
     ...state.pending,
-    [id]: [...(state.pending[id] ?? []), { correlationId, enabled }],
+    [id]: [...(state.pending[id] ?? []), { correlationId, enabled, sequence }],
   };
 
   return {
     ...state,
+    nextSequence: sequence + 1,
     pending,
     entities: { ...state.entities, [id]: rebuildEntity(id, state.serverEntities, pending) },
+  };
+});
+
+on(toggleFlagSuccess, (state, { id, enabled, correlationId }) => {
+  const confirmed = findPendingChange(state.pending, id, correlationId);
+  if (!confirmed) return state;
+
+  const serverEntities = {
+    ...state.serverEntities,
+    [id]: { ...state.serverEntities[id], enabled },
+  };
+  const pending = withoutSupersededChanges(state.pending, id, confirmed.sequence);
+
+  return {
+    ...state,
+    serverEntities,
+    pending,
+    entities: { ...state.entities, [id]: rebuildEntity(id, serverEntities, pending) },
   };
 });
 
@@ -56,7 +76,7 @@ on(toggleFlagFailure, (state, { id, correlationId }) => {
 });
 ```
 
-The effect attaches the correlation ID to the request and echoes it back in success/failure actions.
+The effect attaches the correlation ID to the request and echoes it back in success/failure actions. A newer successful absolute update supersedes older unresolved entries for that entity, so stale responses cannot pull the UI behind the user's latest confirmed intent.
 
 ## Edge cases this recipe handles
 
@@ -67,6 +87,7 @@ The effect attaches the correlation ID to the request and echoes it back in succ
 | Two updates in flight, both succeed | Pending stack drained in order, no visual flicker |
 | Two updates in flight, first fails | Second update remains visible (unaffected) |
 | Two updates in flight, second fails | First update remains visible |
+| Two updates in flight, second succeeds first | Older unresolved update is superseded; later stale responses are ignored |
 | Two updates in flight, both fail | Visible value reverts cleanly to last-known-server |
 
 ## Diagram

@@ -43,7 +43,7 @@ export function createDebouncedSearchEffect(
   options: Partial<DebounceOptions> = {}
 ): Observable<Action> {
   const debounceOptions = { ...defaultDebounceOptions, ...options };
-  let lastIssuedQuery: string | null = null;
+  let lastSuccessfulQuery: string | null = null;
 
   return actions$.pipe(
     ofType(DebounceInputActions.searchInput),
@@ -52,20 +52,21 @@ export function createDebouncedSearchEffect(
         map(() => query.trim()),
         switchMap((normalizedQuery) => {
           if (!normalizedQuery) {
-            lastIssuedQuery = null;
+            lastSuccessfulQuery = null;
             return of(DebounceInputActions.searchCleared());
           }
 
-          if (normalizedQuery === lastIssuedQuery) {
+          if (normalizedQuery === lastSuccessfulQuery) {
             return EMPTY;
           }
-
-          lastIssuedQuery = normalizedQuery;
 
           return concat(
             of(DebounceInputActions.searchLoading({ query: normalizedQuery })),
             api.search(normalizedQuery).pipe(
-              map((results) => DebounceInputActions.searchSuccess({ query: normalizedQuery, results })),
+              map((results) => {
+                lastSuccessfulQuery = normalizedQuery;
+                return DebounceInputActions.searchSuccess({ query: normalizedQuery, results });
+              }),
               catchError((error: unknown) =>
                 of(
                   DebounceInputActions.searchFailure({

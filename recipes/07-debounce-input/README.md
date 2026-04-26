@@ -40,12 +40,16 @@ search$ = actions$.pipe(
     map(() => query.trim()),
     switchMap(normalized => {
       if (!normalized) return of(searchCleared());
-      if (normalized === lastIssuedQuery) return EMPTY;
+      if (normalized === lastSuccessfulQuery) return EMPTY;
 
-      lastIssuedQuery = normalized;
       return concat(
         of(searchLoading({ query: normalized })),
-        api.search(normalized).pipe(map(results => searchSuccess({ query: normalized, results })))
+        api.search(normalized).pipe(
+          map(results => {
+            lastSuccessfulQuery = normalized;
+            return searchSuccess({ query: normalized, results });
+          })
+        )
       );
     })
   ))
@@ -73,7 +77,7 @@ A common mistake is to set `status: 'loading'` on the keystroke action. Then the
 
 ## `distinctUntilKeyChanged` placement
 
-It goes **after** `debounceTime`, not before. Before the debounce, every keystroke is distinct (`'a'`, `'ab'`, `'abc'` are all different). After the debounce, comparing against the last *resolved* query catches the "type c, delete c, type c" case.
+It goes **after** `debounceTime`, not before. Before the debounce, every keystroke is distinct (`'a'`, `'ab'`, `'abc'` are all different). After the debounce, comparing against the last *successful* query catches the "type c, delete c, type c" case. Failed requests do not update that marker, so the same query can be retried.
 
 ## Empty input
 
@@ -90,5 +94,6 @@ See [effects.spec.ts](effects.spec.ts) — jest-marbles tests for:
 - Single keystroke + 300ms quiet → one API call
 - Three rapid keystrokes within 300ms → one API call (last query)
 - Same query typed twice → second one short-circuits
+- Same query after failure → request is allowed to retry
 - Empty input → `searchCleared`, no API call
 - Mid-flight new keystroke → previous request cancelled, new one fires

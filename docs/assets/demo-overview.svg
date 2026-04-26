@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">ngrx-effects-cookbook demo overview</title>
+  <desc id="desc">Preview of the Angular demo shell with recipe navigation, controls, and store state output.</desc>
+  <rect width="1280" height="720" fill="#f5f7f8" />
+  <rect x="56" y="44" width="1168" height="632" rx="14" fill="#ffffff" stroke="#d9e0e6" />
+  <rect x="56" y="44" width="1168" height="116" rx="14" fill="#ffffff" stroke="#d9e0e6" />
+  <text x="92" y="82" fill="#58715d" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">ngrx-effects-cookbook</text>
+  <text x="92" y="120" fill="#172033" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Production-shaped Effects recipes</text>
+  <text x="92" y="148" fill="#4c586a" font-family="Inter, Arial, sans-serif" font-size="18">Cancellation, concurrency, retries, polling, coordination, debounce, and progress.</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="16">
+    <rect x="872" y="74" width="96" height="34" rx="6" fill="#eef5f4" stroke="#cadbd7" />
+    <text x="892" y="96" fill="#173c45" font-weight="700">8 recipes</text>
+    <rect x="980" y="74" width="88" height="34" rx="6" fill="#eef5f4" stroke="#cadbd7" />
+    <text x="1000" y="96" fill="#173c45" font-weight="700">36 specs</text>
+    <rect x="1080" y="74" width="112" height="34" rx="6" fill="#eef5f4" stroke="#cadbd7" />
+    <text x="1099" y="96" fill="#173c45" font-weight="700">Angular 21</text>
+  </g>
+  <rect x="56" y="160" width="278" height="516" fill="#ffffff" stroke="#d9e0e6" />
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="78" y="188" width="232" height="54" rx="6" fill="#e9f3f1" />
+    <text x="94" y="211" fill="#173c45" font-size="17" font-weight="700">01 Race conditions</text>
+    <text x="94" y="232" fill="#667383" font-size="14">Flattening operators</text>
+    <text x="94" y="284" fill="#344154" font-size="17" font-weight="700">02 Retry backoff</text>
+    <text x="94" y="305" fill="#667383" font-size="14">Jitter and retry state</text>
+    <text x="94" y="357" fill="#344154" font-size="17" font-weight="700">03 Optimistic rollback</text>
+    <text x="94" y="378" fill="#667383" font-size="14">Concurrent updates</text>
+    <text x="94" y="430" fill="#344154" font-size="17" font-weight="700">04 Polling lifecycle</text>
+    <text x="94" y="451" fill="#667383" font-size="14">Visibility and hard stops</text>
+    <text x="94" y="503" fill="#344154" font-size="17" font-weight="700">07 Debounce input</text>
+    <text x="94" y="524" fill="#667383" font-size="14">Typing, loading, retry</text>
+  </g>
+  <g transform="translate(370 196)" font-family="Inter, Arial, sans-serif">
+    <text x="0" y="0" fill="#172033" font-size="28" font-weight="700">01 Race conditions and flattening operators</text>
+    <text x="0" y="32" fill="#4c586a" font-size="17">The same async pressure, four operators.</text>
+    <rect x="0" y="70" width="370" height="136" rx="8" fill="#ffffff" stroke="#d9e0e6" />
+    <text x="24" y="104" fill="#172033" font-size="18" font-weight="700">switchMap search</text>
+    <rect x="24" y="126" width="210" height="38" rx="6" fill="#ffffff" stroke="#c7ced8" />
+    <rect x="248" y="126" width="88" height="38" rx="6" fill="#285b7f" />
+    <text x="269" y="150" fill="#ffffff" font-size="15" font-weight="700">Search</text>
+    <rect x="400" y="70" width="370" height="136" rx="8" fill="#ffffff" stroke="#d9e0e6" />
+    <text x="424" y="104" fill="#172033" font-size="18" font-weight="700">concatMap draft save</text>
+    <rect x="424" y="126" width="210" height="38" rx="6" fill="#ffffff" stroke="#c7ced8" />
+    <rect x="648" y="126" width="88" height="38" rx="6" fill="#285b7f" />
+    <text x="675" y="150" fill="#ffffff" font-size="15" font-weight="700">Save</text>
+    <rect x="0" y="232" width="370" height="116" rx="8" fill="#ffffff" stroke="#d9e0e6" />
+    <text x="24" y="266" fill="#172033" font-size="18" font-weight="700">exhaustMap submit</text>
+    <rect x="24" y="288" width="132" height="38" rx="6" fill="#285b7f" />
+    <text x="50" y="312" fill="#ffffff" font-size="15" font-weight="700">Submit</text>
+    <rect x="400" y="232" width="370" height="116" rx="8" fill="#ffffff" stroke="#d9e0e6" />
+    <text x="424" y="266" fill="#172033" font-size="18" font-weight="700">mergeMap uploads</text>
+    <rect x="424" y="288" width="132" height="38" rx="6" fill="#285b7f" />
+    <text x="457" y="312" fill="#ffffff" font-size="15" font-weight="700">Upload</text>
+    <rect x="0" y="380" width="770" height="168" rx="8" fill="#172033" />
+    <text x="24" y="416" fill="#dbe7f7" font-size="16">{</text>
+    <text x="50" y="448" fill="#dbe7f7" font-size="16">"search": { "status": "resolved", "query": "alex" },</text>
+    <text x="50" y="480" fill="#dbe7f7" font-size="16">"draft": { "status": "saved", "version": 2 },</text>
+    <text x="50" y="512" fill="#dbe7f7" font-size="16">"log": ["search won: alex", "draft saved v2"]</text>
+    <text x="24" y="540" fill="#dbe7f7" font-size="16">}</text>
+  </g>
+</svg>

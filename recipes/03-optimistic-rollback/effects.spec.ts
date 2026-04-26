@@ -64,8 +64,56 @@ describe('optimistic rollback recipe', () => {
 
     expect(afterFirstFailure.entities['email-alerts'].enabled).toBe(false);
     expect(afterFirstFailure.pending['email-alerts']).toEqual([
-      { correlationId: 'second', enabled: false }
+      { correlationId: 'second', enabled: false, sequence: 2 }
     ]);
+  });
+
+  it('keeps the latest successful intent visible when responses resolve out of order', () => {
+    const firstOptimistic = optimisticRollbackReducer(
+      initialOptimisticRollbackState,
+      OptimisticRollbackActions.toggleFlagOptimistic({
+        id: 'email-alerts',
+        enabled: true,
+        correlationId: 'first'
+      })
+    );
+    const secondOptimistic = optimisticRollbackReducer(
+      firstOptimistic,
+      OptimisticRollbackActions.toggleFlagOptimistic({
+        id: 'email-alerts',
+        enabled: false,
+        correlationId: 'second'
+      })
+    );
+    const secondSucceedsFirst = optimisticRollbackReducer(
+      secondOptimistic,
+      OptimisticRollbackActions.toggleFlagSuccess({
+        id: 'email-alerts',
+        enabled: false,
+        correlationId: 'second'
+      })
+    );
+    const staleFirstFailure = optimisticRollbackReducer(
+      secondSucceedsFirst,
+      OptimisticRollbackActions.toggleFlagFailure({
+        id: 'email-alerts',
+        correlationId: 'first',
+        error: 'Rejected first'
+      })
+    );
+    const staleFirstSuccess = optimisticRollbackReducer(
+      staleFirstFailure,
+      OptimisticRollbackActions.toggleFlagSuccess({
+        id: 'email-alerts',
+        enabled: true,
+        correlationId: 'first'
+      })
+    );
+
+    expect(secondSucceedsFirst.entities['email-alerts'].enabled).toBe(false);
+    expect(secondSucceedsFirst.pending['email-alerts']).toEqual([]);
+    expect(staleFirstFailure.entities['email-alerts'].enabled).toBe(false);
+    expect(staleFirstSuccess.entities['email-alerts'].enabled).toBe(false);
   });
 
   it('reverts to the server value when every pending update fails', () => {

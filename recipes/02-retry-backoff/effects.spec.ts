@@ -2,7 +2,8 @@ import { Action } from '@ngrx/store';
 import { defer } from 'rxjs';
 import { TestScheduler } from 'rxjs/testing';
 
-import { RetryBackoffActions } from './actions';
+import { ReportSummary, RetryBackoffActions } from './actions';
+import { RetryBackoffApi } from './api';
 import { createLoadReportEffect } from './effects';
 
 describe('retry backoff effect', () => {
@@ -19,22 +20,22 @@ describe('retry backoff effect', () => {
       const emitted: Action[] = [];
       const retryActions: Action[] = [];
       let attemptCount = 0;
-      const report = { id: 'report', title: 'Report', generatedAt: 'now' };
+      const report: ReportSummary = { id: 'report', title: 'Report', generatedAt: 'now' };
       const actions$ = hot('a', { a: RetryBackoffActions.loadReport() });
-      const api = {
+      const api: Pick<RetryBackoffApi, 'loadReport'> = {
         loadReport: jest.fn(() =>
           defer(() => {
             attemptCount += 1;
             return attemptCount < 3
-              ? cold('-#', {}, { status: 503, message: 'Down' })
-              : cold('-r|', { r: report });
+              ? cold<ReportSummary>('-#', {}, { status: 503, message: 'Down' })
+              : cold<ReportSummary>('-r|', { r: report });
           })
         )
       };
 
       createLoadReportEffect(
         actions$,
-        api as any,
+        api,
         { baseDelayMs: 2, maxRetries: 3, jitter: (maxDelayMs) => maxDelayMs, scheduler },
         (action) => retryActions.push(action)
       ).subscribe((action) => emitted.push(action));
@@ -54,13 +55,15 @@ describe('retry backoff effect', () => {
       const emitted: Action[] = [];
       const retryActions: Action[] = [];
       const actions$ = hot('a', { a: RetryBackoffActions.loadReport() });
-      const api = {
-        loadReport: jest.fn(() => cold('-#', {}, { status: 401, message: 'Unauthorized' }))
+      const api: Pick<RetryBackoffApi, 'loadReport'> = {
+        loadReport: jest.fn(() =>
+          cold<ReportSummary>('-#', {}, { status: 401, message: 'Unauthorized' })
+        )
       };
 
       createLoadReportEffect(
         actions$,
-        api as any,
+        api,
         { baseDelayMs: 2, maxRetries: 3, jitter: (maxDelayMs) => maxDelayMs, scheduler },
         (action) => retryActions.push(action)
       ).subscribe((action) => emitted.push(action));
@@ -79,16 +82,16 @@ describe('retry backoff effect', () => {
       const emitted: Action[] = [];
       let attemptCount = 0;
       const actions$ = hot('a', { a: RetryBackoffActions.loadReport() });
-      const api = {
+      const api: Pick<RetryBackoffApi, 'loadReport'> = {
         loadReport: jest.fn(() =>
           defer(() => {
             attemptCount += 1;
-            return cold('-#', {}, { status: 503, message: `Down ${attemptCount}` });
+            return cold<ReportSummary>('-#', {}, { status: 503, message: `Down ${attemptCount}` });
           })
         )
       };
 
-      createLoadReportEffect(actions$, api as any, {
+      createLoadReportEffect(actions$, api, {
         baseDelayMs: 1,
         maxRetries: 2,
         jitter: (maxDelayMs) => maxDelayMs,
